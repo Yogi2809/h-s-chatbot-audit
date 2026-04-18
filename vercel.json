@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "nodeVersion": "18.x",
+  "env": {
+    "SKIP_PRISMA_POSTINSTALL": "true"
+  },
+  "installCommand": "npm install --no-save --omit=optional @prisma/client || npm install"
+}
