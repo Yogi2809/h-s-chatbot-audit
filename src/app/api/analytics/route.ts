@@ -3,6 +3,25 @@ import { prisma } from '@/lib/prisma';
 
 export const GET = async (request: Request) => {
   try {
+    // Check if database is configured
+    if (!prisma) {
+      return NextResponse.json({
+        success: true,
+        message: 'Database not configured',
+        summary: {
+          totalConversations: 0,
+          totalAuditRuns: 0,
+          averageScore: 0,
+          highSeverityIssues: 0,
+          mediumSeverityIssues: 0,
+          lowSeverityIssues: 0,
+        },
+        recentConversations: [],
+        topIssueTypes: [],
+        warning: 'Set DATABASE_URL to enable analytics',
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30');
 
@@ -86,7 +105,7 @@ export const GET = async (request: Request) => {
     });
 
     const severityMap = issueStats.reduce(
-      (acc, stat) => ({
+      (acc: Record<string, number>, stat: { severity: string; _count: { id: number } }) => ({
         ...acc,
         [stat.severity]: stat._count.id,
       }),

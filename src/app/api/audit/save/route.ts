@@ -4,6 +4,18 @@ import { parse } from 'csv-parse/sync';
 
 export const POST = async (request: NextRequest) => {
   try {
+    // Check if database is configured
+    if (!prisma) {
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Audit processed (database not configured)',
+          warning: 'Results not persisted - set DATABASE_URL to enable storage',
+        },
+        { status: 200 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 

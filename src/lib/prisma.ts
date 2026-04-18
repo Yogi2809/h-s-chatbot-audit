@@ -1,11 +1,26 @@
-import { PrismaClient } from '@prisma/client';
+// Prisma client for database operations
+// This is optional - database features work only when DATABASE_URL is configured
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+let prisma: any = null;
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: ['error'],
-  });
+try {
+  const { PrismaClient } = require('@prisma/client');
+  
+  const globalForPrisma = global as unknown as { prisma: any };
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+  prisma =
+    globalForPrisma.prisma ||
+    new PrismaClient({
+      log: ['error'],
+    });
+
+  if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = prisma;
+  }
+} catch (err) {
+  console.warn('Prisma not available - database features disabled');
+  prisma = null;
+}
+
+export { prisma };
+

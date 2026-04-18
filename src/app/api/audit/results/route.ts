@@ -3,6 +3,16 @@ import { prisma } from '@/lib/prisma';
 
 export const GET = async (request: Request) => {
   try {
+    // Check if database is configured
+    if (!prisma) {
+      return NextResponse.json({
+        success: true,
+        message: 'Database not configured',
+        auditRuns: [],
+        warning: 'Set DATABASE_URL to enable result persistence',
+      });
+    }
+
     const { searchParams } = new URL(request.url);
     const auditRunId = searchParams.get('runId');
     const limit = searchParams.get('limit') || '50';
