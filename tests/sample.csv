@@ -1,0 +1,9 @@
+Session ID,Appointment ID,Session Type,Chat Date,Chat Time IST,POC,MSG TYPE,CONTENT
+S001,A001,consultation,2024-04-18,10:30,John Doe,human,Hello I need help with my account
+S001,A001,consultation,2024-04-18,10:31,Chatbot,ai,I'm here to help. What's your concern?
+S002,A002,support,2024-04-18,11:00,Jane Smith,human,There was an error with my payment
+S002,A002,support,2024-04-18,11:01,Chatbot,ai,I apologize for the issue
+S003,A003,consultation,2024-04-18,14:00,Bob Johnson,human,How do I reset my password?
+S003,A003,consultation,2024-04-18,14:02,Chatbot,ai,You can reset your password from the login page
+S004,A004,support,2024-04-18,15:30,Alice Cooper,human,My account is locked
+S004,A004,support,2024-04-18,15:31,Chatbot,ai,Let me help you unlock your account
