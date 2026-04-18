@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parse } from 'csv-parse/sync';
+import { mapAuditToOutput } from '@/lib/output-mapper';
+import { convertToCSV } from '@/lib/csv-export';
 
 export const POST = async (request: NextRequest) => {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    const format = (formData.get('format') as string) || 'json'; // 'json' or 'csv'
 
     if (!file) {
       return NextResponse.json(
@@ -33,10 +36,27 @@ export const POST = async (request: NextRequest) => {
     // Process records through audit engine
     const auditResults = processAudit(records);
 
+    // If CSV export is requested
+    if (format === 'csv') {
+      const outputRows = mapAuditToOutput(records, auditResults);
+      const csvContent = convertToCSV(outputRows);
+
+      return new NextResponse(csvContent, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv;charset=utf-8',
+          'Content-Disposition': `attachment; filename="audit-results-${new Date().toISOString().split('T')[0]}.csv"`,
+        },
+      });
+    }
+
+    // Default: JSON response
+    const outputRows = mapAuditToOutput(records, auditResults);
     return NextResponse.json({
       success: true,
       totalRecords: records.length,
       results: auditResults,
+      auditOutput: outputRows,
       summary: generateSummary(auditResults),
     });
   } catch (error) {

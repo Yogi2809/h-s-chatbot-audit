@@ -31,20 +31,30 @@ interface AuditResponse {
   success: boolean;
   totalRecords: number;
   results: AuditRecord[];
+  auditOutput?: any[];
   summary: Summary;
+}
+
+interface InputRecords {
+  [key: string]: string;
 }
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [auditResults, setAuditResults] = useState<AuditResponse | null>(null);
+  const [inputRecords, setInputRecords] = useState<InputRecords[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleUpload = async (file: File) => {
     setIsLoading(true);
     setError(null);
     setAuditResults(null);
+    setInputRecords(null);
 
     try {
+      // First, read the file to store the original records
+      const fileContent = await file.text();
+      
       const formData = new FormData();
       formData.append('file', file);
 
@@ -60,8 +70,62 @@ export default function Home() {
 
       const data: AuditResponse = await response.json();
       setAuditResults(data);
+      
+      // Parse the original records to store them
+      const { parse } = await import('csv-parse/sync');
+      try {
+        const records = parse(fileContent, {
+          columns: true,
+          skip_empty_lines: true,
+          trim: true,
+        });
+        setInputRecords(records);
+      } catch (parseError) {
+        console.error('Failed to parse records:', parseError);
+      }
     } catch (err) {
       setError(String(err instanceof Error ? err.message : 'An error occurred'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExportCSV = async () => {
+    if (!auditResults || !inputRecords) {
+      setError('No data available to export');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/audit/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          records: inputRecords,
+          auditResults: auditResults.results,
+          fileName: `audit-results-${new Date().toISOString().split('T')[0]}.csv`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export CSV');
+      }
+
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `audit-results-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      setError(String(err instanceof Error ? err.message : 'Failed to export CSV'));
     } finally {
       setIsLoading(false);
     }
@@ -91,13 +155,23 @@ export default function Home() {
 
         {/* Results Section */}
         {auditResults && (
-          <ResultsDisplay
-            summary={auditResults.summary}
-            results={auditResults.results}
-          />
-        )}
+          <>
+            <div className="mb-6 flex gap-3">
+              <button
+                onClick={handleExportCSV}
+                disabled={isLoading}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {isLoading ? 'Exporting...' : '📥 Export as CSV'}
+              </button>
+            </div>
 
-        {/* Empty State */}
+            <ResultsDisplay
+              summary={auditResults.summary}
+              results={auditResults.results}
+            />
+          </>
+        )}
         {!auditResults && !isLoading && !error && (
           <div className="mt-8 rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
             <svg
