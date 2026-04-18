@@ -1,11 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "framework": "nextjs",
-  "nodeVersion": "18.x",
-  "env": {
-    "SKIP_PRISMA_VALIDATION": "1",
-    "PRISMA_SKIP_DATASOURCE_VALIDATION": "1",
-    "PRISMA_SKIP_ENGINE_CHECK": "1"
-  }
+  "nodeVersion": "18.x"
 }
