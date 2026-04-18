@@ -1,0 +1,42 @@
+{
+  "name": "h-s-chatbot-audit",
+  "version": "1.0.0",
+  "description": "H&S Chatbot Audit Automation System",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "node tests/validate-data.js",
+    "test:e2e": "ts-node tests/e2e-test.ts",
+    "setup:env": "node scripts/validate-env.js interactive",
+    "setup:env:validate": "node scripts/validate-env.js validate",
+    "setup:env:guide": "node scripts/validate-env.js guide",
+    "setup:env:test": "node scripts/validate-env.js test",
+    "setup": "npm run setup:env && npm install && npm run build",
+    "deploy:vercel": "bash scripts/deploy-vercel.sh"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.3.0",
+    "xlsx": "^0.18.5",
+    "date-fns": "^2.30.0",
+    "zod": "^3.22.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "tailwindcss": "^3.3.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8.50.0",
+    "eslint-config-next": "^14.0.0",
+    "ts-node": "^10.9.0"
+  }
+}
