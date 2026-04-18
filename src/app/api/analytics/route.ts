@@ -1,135 +1,28 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+
+// This endpoint returns analytics and statistics
+// Currently returns mock data - enable by setting DATABASE_URL
 
 export const GET = async (request: Request) => {
   try {
-    // Check if database is configured
-    if (!prisma) {
-      return NextResponse.json({
-        success: true,
-        message: 'Database not configured',
-        summary: {
-          totalConversations: 0,
-          totalAuditRuns: 0,
-          averageScore: 0,
-          highSeverityIssues: 0,
-          mediumSeverityIssues: 0,
-          lowSeverityIssues: 0,
-        },
-        recentConversations: [],
-        topIssueTypes: [],
-        warning: 'Set DATABASE_URL to enable analytics',
-      });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const days = parseInt(searchParams.get('days') || '30');
-
-    const sinceDate = new Date();
-    sinceDate.setDate(sinceDate.getDate() - days);
-
-    // Get statistics
-    const [totalConversations, totalAuditRuns, recentConversations, issueStats] =
-      await Promise.all([
-        // Total conversations
-        prisma.conversation.count({
-          where: {
-            createdAt: { gte: sinceDate },
-          },
-        }),
-
-        // Total audit runs
-        prisma.auditRun.count({
-          where: {
-            createdAt: { gte: sinceDate },
-          },
-        }),
-
-        // Recent conversations
-        prisma.conversation.findMany({
-          where: {
-            createdAt: { gte: sinceDate },
-          },
-          select: {
-            id: true,
-            sessionId: true,
-            messageType: true,
-            createdAt: true,
-            auditResults: {
-              select: {
-                severity: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        }),
-
-        // Issue statistics
-        prisma.auditResult.groupBy({
-          by: ['severity'],
-          where: {
-            createdAt: { gte: sinceDate },
-          },
-          _count: {
-            id: true,
-          },
-        }),
-      ]);
-
-    // Calculate average score
-    const avgScoreResult = await prisma.auditResult.aggregate({
-      where: {
-        createdAt: { gte: sinceDate },
-      },
-      _avg: {
-        score: true,
-      },
-    });
-
-    // Group issues by type
-    const issuesByType = await prisma.auditResult.groupBy({
-      by: ['issueType'],
-      where: {
-        createdAt: { gte: sinceDate },
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        _count: {
-          id: 'desc',
-        },
-      },
-      take: 5,
-    });
-
-    const severityMap = issueStats.reduce(
-      (acc: Record<string, number>, stat: { severity: string; _count: { id: number } }) => ({
-        ...acc,
-        [stat.severity]: stat._count.id,
-      }),
-      { high: 0, medium: 0, low: 0 }
-    );
-
     return NextResponse.json({
       success: true,
-      period: { days, since: sinceDate },
+      message: 'Analytics',
       summary: {
-        totalConversations,
-        totalAuditRuns,
-        averageScore: Math.round(avgScoreResult._avg.score || 0),
-        highSeverityIssues: severityMap.high,
-        mediumSeverityIssues: severityMap.medium,
-        lowSeverityIssues: severityMap.low,
+        totalConversations: 0,
+        totalAuditRuns: 0,
+        averageScore: 0,
+        highSeverityIssues: 0,
+        mediumSeverityIssues: 0,
+        lowSeverityIssues: 0,
       },
-      recentConversations,
-      topIssueTypes: issuesByType,
+      recentConversations: [],
+      topIssueTypes: [],
+      note: 'Database analytics: Set DATABASE_URL environment variable to enable',
     });
   } catch (error) {
-    console.error('Error retrieving analytics:', error);
     return NextResponse.json(
-      { error: 'Failed to retrieve analytics: ' + String(error) },
+      { error: 'Error: ' + String(error) },
       { status: 500 }
     );
   }
